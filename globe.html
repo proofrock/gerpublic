@@ -1,0 +1,5001 @@
+<body>
+    <div id="globeViz"></div>
+    <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
+    <script>
+        let world;
+        let currentData = [];
+
+        // Icon definitions
+        const iconSVGs = {
+            home: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>`,
+            tour: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L9 8.3V13h2V9.6l-.2-.7z"/>
+            </svg>`,
+            airport: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.36 2.64l-16.5 16.5c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0L21.77 4.05c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0z"/>
+                <path d="M10.5 12L2.5 4 1 5.5 9 13.5l1.5-1.5z"/>
+                <path d="M21.1 11.1l-8-8c-.4-.4-1-.4-1.4 0-.4.4-.4 1 0 1.4l8 8c.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4z"/>
+            </svg>`,
+            food: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.20-1.10-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
+            </svg>`,
+            culture: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>`
+        };
+
+        // Sample data for testing
+        const sampleData = [
+            {
+                type: "home",
+                lng: -9.05679050000003,
+                lat: 53.270668,
+                label: "Galway",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -9.28971060000003,
+                lat: 53.0301669,
+                label: "Lisdoonvarna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -9.54086000000007,
+                lat: 53.45594,
+                label: "Maam Cross",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -0.127758299999982,
+                lat: 51.5073509,
+                label: "Londra",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.35221479999996,
+                lat: 48.8565823,
+                label: "Parigi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.0766654,
+                lat: 49.4521018,
+                label: "Norimberga",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.3738189000001,
+                lat: 48.2081743,
+                label: "Vienna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.5819805,
+                lat: 48.1351253,
+                label: "Monaco di Baviera",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.23091,
+                lat: 48.00214,
+                label: "Baden bei Wien",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8506199999999,
+                lat: 46.60856,
+                label: "Villaco",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.05501,
+                lat: 47.80949,
+                label: "Salisburgo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.17331309999997,
+                lat: 41.3850477,
+                label: "Barcellona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -14.053676,
+                lat: 28.3587436,
+                label: "Fuerteventura",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.68685649999998,
+                lat: 45.070312,
+                label: "Torino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.7913751,
+                lat: 45.1564168,
+                label: "Mantova",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.18998199999999,
+                lat: 45.4642035,
+                label: "Milano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.6053754,
+                lat: 45.4969717,
+                label: "Sirmione",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.9916215000001,
+                lat: 45.4383842,
+                label: "Verona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.5354214,
+                lat: 45.5454787,
+                label: "Vicenza",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.0071652,
+                lat: 45.2736648,
+                label: "Isola della Scala",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.3795921,
+                lat: 45.3089469,
+                label: "Cologna Veneta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.2790144000001,
+                lat: 45.2198654,
+                label: "Chioggia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.8283805,
+                lat: 46.1757686,
+                label: "Fiera di Primiero",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.619787,
+                lat: 44.8381237,
+                label: "Ferrara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.2035294,
+                lat: 44.4183598,
+                label: "Ravenna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.3426162000001,
+                lat: 44.494887,
+                label: "Bologna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.0194200999999,
+                lat: 43.8398164,
+                label: "Fano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6365633,
+                lat: 43.7262567,
+                label: "Urbino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.3432256,
+                lat: 43.8966191,
+                label: "San Leo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.2558136,
+                lat: 43.7695604,
+                label: "Firenze",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.4950609,
+                lat: 43.8376211,
+                label: "Lucca",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.3278680999999,
+                lat: 43.3055726,
+                label: "Umbertide",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.9158533,
+                lat: 42.8667083,
+                label: "Postignano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7014749,
+                lat: 42.9508683,
+                label: "Foligno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.27444850000006,
+                lat: 45.5845001,
+                label: "Monza",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.0673543,
+                lat: 45.8087899,
+                label: "Lovere",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.1884898000001,
+                lat: 45.8928151,
+                label: "Boario Terme",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.8674897999999,
+                lat: 45.4827606,
+                label: "Pescantina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.3372914,
+                lat: 46.4271136,
+                label: "Laives",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.3547582,
+                lat: 46.4982953,
+                label: "Bolzano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.5658188,
+                lat: 46.6082329,
+                label: "Laion",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.1525179,
+                lat: 46.6712938,
+                label: "Merano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.2124083,
+                lat: 42.4396474,
+                label: "Orbetello",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.1149496,
+                lat: 42.4374939,
+                label: "Porto Santo Stefano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.7006903,
+                lat: 42.9266598,
+                label: "Bagni San Filippo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.1130386,
+                lat: 42.6275754,
+                label: "Civita di Bagnoregio",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.2048941,
+                lat: 42.5014091,
+                label: "Albinia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.2681244,
+                lat: 40.8517746,
+                label: "Napoli - Ago 2011",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.3612671,
+                lat: 38.1156879,
+                label: "Palermo - Ago 2011",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7334622,
+                lat: 38.1750295,
+                label: "San Vito Lo Capo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7987972999999,
+                lat: 38.0989138,
+                label: "Riserva Naturale Orientata dello Zingaro",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.8179128,
+                lat: 38.0702839,
+                label: "Scopello",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.5873511,
+                lat: 38.0380892,
+                label: "Erice",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.5193819,
+                lat: 38.0126307,
+                label: "Porto di Trapani",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.3286129000001,
+                lat: 37.9310758,
+                label: "Favignana",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.8360706999999,
+                lat: 37.9416296,
+                label: "Parco Archeologico di Segesta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.5859823000001,
+                lat: 37.3094075,
+                label: "Agrigento",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.4727617999999,
+                lat: 37.2899672,
+                label: "Scala dei Turchi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.2912408,
+                lat: 37.3942297,
+                label: "Eraclea Minoa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.22358889999998,
+                lat: 40.9401332,
+                label: "Stintino - Ago 2012",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.20928159999994,
+                lat: 40.9661334,
+                label: "Spiaggia della Pelosa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.14830929999994,
+                lat: 40.7338696,
+                label: "Argentiera",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.31929489999993,
+                lat: 40.5579517,
+                label: "Alghero",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.79005499999994,
+                lat: 40.116974,
+                label: "Nuraghe Losa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.40079500000002,
+                lat: 39.967192,
+                label: "Mari Ermi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.36928890000002,
+                lat: 39.1097941,
+                label: "Calasetta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.41842240000005,
+                lat: 39.0373917,
+                label: "Sant'Antioco",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.57012959999997,
+                lat: 39.2500991,
+                label: "Costa Rei",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.5169899,
+                lat: 39.1457764,
+                label: "Villasimius",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.62717550000002,
+                lat: 40.2803536,
+                label: "Cala Gonone",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.62288890000002,
+                lat: 40.2469717,
+                label: "Grotte del Bue Marino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.68981400000007,
+                lat: 40.1078959,
+                label: "Cala Goloritzè",
+                color: "#e0531b"
+            },
+            {
+                type: "accommodation",
+                lng: 9.48890900000004,
+                lat: 40.28977,
+                label: "Experience Hotel Su Gologone",
+                color: "#e74c3c"
+            },
+            {
+                type: "home",
+                lng: 9.62529129999996,
+                lat: 40.9961235,
+                label: "Golfo Aranci",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.9188758,
+                lat: 48.3114648,
+                label: "Erding",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6195966,
+                lat: 43.0707017,
+                label: "Assisi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6711898,
+                lat: 42.987653,
+                label: "Spello",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.3908279,
+                lat: 43.1107168,
+                label: "Perugia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.6775951,
+                lat: 43.0774495,
+                label: "Pienza",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.1106802,
+                lat: 42.7185068,
+                label: "Orvieto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7378003,
+                lat: 42.7404881,
+                label: "Spoleto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.4863265,
+                lat: 43.0115564,
+                label: "Bettona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6092682999999,
+                lat: 42.9372855,
+                label: "Bevagna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.0478399,
+                lat: 43.1264498,
+                label: "Castiglione del Lago",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.3307574,
+                lat: 43.318809,
+                label: "Siena",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.5753166,
+                lat: 43.3513193,
+                label: "Gubbio",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.4890032000001,
+                lat: 43.0551015,
+                label: "Montalcino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.7872467,
+                lat: 43.0986938,
+                label: "Montepulciano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.8137616,
+                lat: 43.0443444,
+                label: "Chianciano Terme",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.6046709,
+                lat: 43.2849742,
+                label: "Rapolano Terme",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.107669,
+                lat: 42.4206766,
+                label: "Viterbo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.8703089000001,
+                lat: 42.4185731,
+                label: "Tuscania",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.7575684,
+                lat: 42.2541846,
+                label: "Tarquinia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.7007863,
+                lat: 42.2289306,
+                label: "Lido di Tarquinia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.0337914,
+                lat: 42.5402375,
+                label: "Montefiascone",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.9246989000001,
+                lat: 42.5338958,
+                label: "Marta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.9864377,
+                lat: 42.6442035,
+                label: "Bolsena",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.4065686,
+                lat: 42.7819352,
+                label: "Todi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.3105674,
+                lat: 43.548473,
+                label: "Livorno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.4016888,
+                lat: 43.7228386,
+                label: "Pisa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.4963655,
+                lat: 41.9027835,
+                label: "Roma",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.2463797,
+                lat: 43.5270861,
+                label: "Jesi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.5802258,
+                lat: 43.9049431,
+                label: "Gemmano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6719206,
+                lat: 43.857429,
+                label: "Mondaino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7710328000001,
+                lat: 43.9395805,
+                label: "Gradara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.6217034,
+                lat: 43.5191009,
+                label: "Sirolo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.6221799,
+                lat: 43.510502,
+                label: "Numana",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.6087579,
+                lat: 40.6555867,
+                label: "Scala",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.6026805,
+                lat: 40.6340026,
+                label: "Amalfi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.6117111999999,
+                lat: 40.6491886,
+                label: "Ravello",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.4849812,
+                lat: 40.6280528,
+                label: "Positano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3740169,
+                lat: 40.6056513,
+                label: "Sant'Agata sui Due Golfi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3559655,
+                lat: 40.5834258,
+                label: "Marina del Cantone",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3757985,
+                lat: 40.6262925,
+                label: "Sorrento",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3516429,
+                lat: 40.6340861,
+                label: "Villa di Pollio Felice - Bagni della Regina Giovanna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.4820746,
+                lat: 40.7482435,
+                label: "Parco Archeologico di Pompei",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.7768182,
+                lat: 45.6495264,
+                label: "Trieste",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.7301877,
+                lat: 45.548059,
+                label: "Capodistria",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.5908455,
+                lat: 45.5142898,
+                label: "Portorose",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.5682895,
+                lat: 45.528319,
+                label: "Pirano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.5922308,
+                lat: 45.4971741,
+                label: "Saline di Sicciole",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8738185,
+                lat: 45.7093519,
+                label: "Sesana",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.5095719,
+                lat: 46.0577499,
+                label: "Lubiana",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.2677063,
+                lat: 46.2397495,
+                label: "Celje",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.6458812,
+                lat: 46.5546503,
+                label: "Marburgo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.8696884,
+                lat: 46.4199535,
+                label: "Ptuj",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.5632807,
+                lat: 46.14945,
+                label: "Olimje",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.5975783,
+                lat: 46.1559752,
+                label: "Pod?etrtek",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.442176,
+                lat: 45.3270631,
+                label: "Fiume",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.2313647999999,
+                lat: 44.119371,
+                label: "Zara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.2501894,
+                lat: 43.516387,
+                label: "Traù",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.4401935,
+                lat: 43.5081323,
+                label: "Spalato",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.9230156,
+                lat: 43.586316,
+                label: "Capocesto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.9667469999999,
+                lat: 43.535286,
+                label: "Rogoznica",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.9663343,
+                lat: 43.6357583,
+                label: "Greba¨tica",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.8952045,
+                lat: 43.7350196,
+                label: "Sibenico",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.3061543,
+                lat: 43.8103142,
+                label: "Kornati",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.5563564,
+                lat: 43.3832709,
+                label: "San Pietro della Brazza",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.8726709,
+                lat: 43.2856329,
+                label: "Sumartin",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.0215238999999,
+                lat: 43.2937769,
+                label: "Macarsca",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.187691,
+                lat: 43.1265922,
+                label: "Su?uraj",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.2463201,
+                lat: 43.1560519,
+                label: "Drvenik",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.4872852,
+                lat: 43.1625495,
+                label: "Milna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.4411136,
+                lat: 43.1729478,
+                label: "Lesina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.5992505,
+                lat: 43.1839958,
+                label: "Cittavecchia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.518915,
+                lat: 43.6158299,
+                label: "Ancona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.3833333,
+                lat: 43.1666667,
+                label: "Pakleni Otoci",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.1778637,
+                lat: 42.9757655,
+                label: "Orebi?",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.1342309,
+                lat: 42.9584041,
+                label: "Curzola",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.1062449999999,
+                lat: 42.960587,
+                label: "Villa Castello",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.1695928,
+                lat: 42.9219892,
+                label: "Lumbarda",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.009232,
+                lat: 42.926359,
+                label: "Pupnatska Luka",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.6709804,
+                lat: 43.1839321,
+                label: "Mljet",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.0112068999999,
+                lat: 42.9754329,
+                label: "Bi¨evo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.1715647999999,
+                lat: 43.0213823,
+                label: "Stiniva",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.8925994,
+                lat: 42.7872022,
+                label: "Slano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.0944238,
+                lat: 42.6506606,
+                label: "Ragusa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.2175941,
+                lat: 42.5812683,
+                label: "Ragusa Vecchia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.5314753,
+                lat: 42.4572478,
+                label: "Castelnuovo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.7690064999999,
+                lat: 42.4552987,
+                label: "Dobrota",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.771234,
+                lat: 42.424662,
+                label: "Cattaro",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.7185184,
+                lat: 42.4899244,
+                label: "Perasto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.6888779999999,
+                lat: 42.4865878,
+                label: "Ostrvo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.840295,
+                lat: 42.2911489,
+                label: "Budua",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.8982264,
+                lat: 42.2515444,
+                label: "Santo Stefano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.9992548,
+                lat: 42.1628207,
+                label: "?anj",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.2147632,
+                lat: 41.9310884,
+                label: "Dulcigno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.0899039999999,
+                lat: 42.238938,
+                label: "Virpazar",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.2914983000001,
+                lat: 42.1837016,
+                label: "Lago di Scutari",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.0301657,
+                lat: 42.6751,
+                label: "???????? ??????",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.902683,
+                lat: 43.1886515,
+                label: "Brezna Eco Village",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.7772645,
+                lat: 43.505478,
+                label: "Fo?a",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.4130763000001,
+                lat: 43.8562586,
+                label: "Sarajevo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.191,
+                lat: 44.7721811,
+                label: "Banja Luka",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.9819189,
+                lat: 45.8150108,
+                label: "Zagabria",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.162899,
+                lat: 43.9375282,
+                label: "Sali",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.2428003,
+                lat: 40.5506899,
+                label: "Capri",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8605512,
+                lat: 40.7382914,
+                label: "Forio",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8903541,
+                lat: 40.7502875,
+                label: "Lacco Ameno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.9045238,
+                lat: 40.7480596,
+                label: "Casamicciola Terme",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.9486184,
+                lat: 40.7379299,
+                label: "Ischia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.9156679,
+                lat: 40.6999338,
+                label: "Spiaggia dei Maronti",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8927148,
+                lat: 40.6963117,
+                label: "Spiaggia di Sant'Angelo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.89779,
+                lat: 48.3705449,
+                label: "Augusta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.7778041,
+                lat: 48.7185826,
+                label: "Donauwörth",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.4894906,
+                lat: 48.8508157,
+                label: "Nördlingen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.3259395,
+                lat: 49.0670187,
+                label: "Dinkelsbühl",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.1867388000001,
+                lat: 49.3801834,
+                label: "Rothenburg ob der Tauber",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.95335479999994,
+                lat: 49.7913044,
+                label: "Würzburg",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.4147863000001,
+                lat: 49.5031221,
+                label: "Bad Windsheim",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.9027636000001,
+                lat: 49.8988135,
+                label: "Bamberga",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.4041024000001,
+                lat: 47.2692124,
+                label: "Innsbruck",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.97106,
+                lat: 47.07408,
+                label: "Längenfeld",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.0076232,
+                lat: 46.9654937,
+                label: "Sölden",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7627199999999,
+                lat: 46.82769,
+                label: "Lienz",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.4257540999999,
+                lat: 48.7665351,
+                label: "Ingolstadt",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.404954,
+                lat: 52.5200066,
+                label: "Berlino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.99473469999998,
+                lat: 46.2679927,
+                label: "Moleno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.35851200000002,
+                lat: 48.0793589,
+                label: "Colmar",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.75211130000002,
+                lat: 48.5734053,
+                label: "Strasburgo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.29982199999995,
+                lat: 48.166158,
+                label: "Riquewihr",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.30652199999997,
+                lat: 48.043265,
+                label: "Eguisheim",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.33588800000007,
+                lat: 47.750839,
+                label: "Mulhouse",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.22852420000004,
+                lat: 48.76564,
+                label: "Baden-Baden",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.84210429999996,
+                lat: 47.9990077,
+                label: "Friburgo in Brisgovia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.31909099999996,
+                lat: 48.194668,
+                label: "Ribeauvillé",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.58072500000003,
+                lat: 49.032928,
+                label: "Mauregard",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.59237589999998,
+                lat: 49.017823,
+                label: "Le Mesnil-Amelot",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -82.3665956,
+                lat: 23.1135925,
+                label: "L'Avana",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -81.1371742,
+                lat: 22.510649,
+                label: "Finca Fiesta Campesina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -83.6880257,
+                lat: 22.4133651,
+                label: "Pinar del Río",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -83.7255639,
+                lat: 22.6051793,
+                label: "Viñales Valley",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -78.9797271,
+                lat: 22.6495044,
+                label: "Cayo Santa María",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -79.9416549,
+                lat: 22.424398,
+                label: "Santa Clara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -79.9808143,
+                lat: 21.7960343,
+                label: "Trinidad",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -80.0129679,
+                lat: 21.7405008,
+                label: "Playa Ancon",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -80.0332325,
+                lat: 21.7970075,
+                label: "La Boca",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -80.0296013,
+                lat: 21.7710816,
+                label: "Snorkeling Snack \"La Batea\"",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -80.4437781,
+                lat: 22.1599753,
+                label: "Cienfuegos",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -81.0257763,
+                lat: 22.069084,
+                label: "Playa Giron",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -80.9549904,
+                lat: 22.0442271,
+                label: "Caleta Buena",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -81.1362326,
+                lat: 22.1667051,
+                label: "CAVE OF FISH",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -81.2050614,
+                lat: 22.2886647,
+                label: "Playa Larga",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -81.1278814,
+                lat: 22.5267186,
+                label: "Jagüey Grande",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -74.0059728,
+                lat: 40.7127753,
+                label: "New York",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -73.9570696,
+                lat: 40.7081156,
+                label: "Williamsburg",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -70.0086306,
+                lat: 12.5092044,
+                label: "Oranjestad",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -69.8807732,
+                lat: 12.4143189,
+                label: "Baby Beach",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -70.0413821,
+                lat: 12.5690606,
+                label: "Palm Beach",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -84.3879824,
+                lat: 33.7489954,
+                label: "Atlanta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 4.89516789999993,
+                lat: 52.3702157,
+                label: "Amsterdam",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 55.2707828,
+                lat: 25.2048493,
+                label: "Dubai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 144.963056,
+                lat: -37.813611,
+                label: "Melbourne",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 145.2038278,
+                lat: -38.4898703,
+                label: "Phillip Island",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 144.316667,
+                lat: -38.333333,
+                label: "Torquay",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 144.1825171,
+                lat: -38.4096639,
+                label: "Anglesea",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 143.65,
+                lat: -38.75,
+                label: "Apollo Bay",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 143.5240583,
+                lat: -38.8340286,
+                label: "Cape Otway",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 143.1029791,
+                lat: -38.6645738,
+                label: "Twelve Apostles",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 143.9715484,
+                lat: -38.5366556,
+                label: "Lorne",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 151.2092955,
+                lat: -33.8688197,
+                label: "Città di Sydney",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 151.2816573,
+                lat: -33.8398183,
+                label: "Watsons Bay",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 151.277726,
+                lat: -33.89102,
+                label: "Bondi Beach",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.8456418,
+                lat: -12.4634403,
+                label: "Darwin",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 132.833333,
+                lat: -12.666667,
+                label: "Jabiru",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 132.4809011,
+                lat: -12.6770131,
+                label: "Kakadu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 145.7780548,
+                lat: -16.9185514,
+                label: "Cairns",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 145.465278,
+                lat: -16.483611,
+                label: "Port Douglas",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 145.4547764,
+                lat: -16.0877894,
+                label: "Cape Tribulation",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 153.0251235,
+                lat: -27.4697707,
+                label: "Brisbane",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 177.4356227,
+                lat: -17.7765356,
+                label: "Nadi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 177.3736292,
+                lat: -17.77276,
+                label: "Denarau Island",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 177.066564,
+                lat: -17.638503,
+                label: "Matamanoa Island Resort",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 177.0333333,
+                lat: -17.6166667,
+                label: "Monuriki Island",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 114.1796057,
+                lat: 22.3185673,
+                label: "Kowloon",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 114.1696121,
+                lat: 22.3192011,
+                label: "Hong Kong",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 114.145532,
+                lat: 22.2758835,
+                label: "Victoria Peak",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 139.6917064,
+                lat: 35.6894875,
+                label: "Tokyo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 137.2521729,
+                lat: 36.1461236,
+                label: "Takayama",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 136.9027356,
+                lat: 36.2565774,
+                label: "Villaggi storici di Shirakawa-go e Gokayama",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 136.6562051,
+                lat: 36.5613254,
+                label: "Kanazawa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 135.7680294,
+                lat: 35.0116363,
+                label: "Kyoto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 135.8050002,
+                lat: 34.6850869,
+                label: "Nara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 134.6853528,
+                lat: 34.815149,
+                label: "Himeji",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 133.9195019,
+                lat: 34.6551456,
+                label: "Okayama",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 132.4552927,
+                lat: 34.3852029,
+                label: "Hiroshima",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 132.3038391,
+                lat: 34.311381,
+                label: "Miyajimaguchi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 132.3220126,
+                lat: 34.2991607,
+                label: "Miyajimacho",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 135.5021651,
+                lat: 34.6937378,
+                label: "Osaka",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.5017651,
+                lat: 13.7563309,
+                label: "Bangkok",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.4746879,
+                lat: 7.0086472,
+                label: "Hat Yai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.7216736,
+                lat: 6.8605243,
+                label: "Pak Bara Pier",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.3048959,
+                lat: 6.4885717,
+                label: "Ko Lipe",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.2624372,
+                lat: 6.5149976,
+                label: "?????????? - Ko Hin Ngam",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.1647222,
+                lat: 6.5408333,
+                label: "Ko Ra Ba",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.1217486,
+                lat: 46.0747793,
+                label: "Trento",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.1525516,
+                lat: 46.0658551,
+                label: "Povo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.8373991999999,
+                lat: 45.7805759,
+                label: "Portogruaro",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.5376873,
+                lat: 45.8580754,
+                label: "Portobuffolè",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.4973110999999,
+                lat: 45.7797646,
+                label: "Oderzo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.0830304,
+                lat: 37.5078772,
+                label: "Catania",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.0188436,
+                lat: 38.0084171,
+                label: "Cefalù",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.6961891999999,
+                lat: 37.984023,
+                label: "Termini Imerese",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.2853127,
+                lat: 37.8516366,
+                label: "Taormina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.9252269,
+                lat: 44.647128,
+                label: "Modena",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.3279036,
+                lat: 44.801485,
+                label: "Parma",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.2807553,
+                lat: 44.6592789,
+                label: "Torrechiara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.6319728,
+                lat: 43.9037262,
+                label: "Petrognano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.8551196,
+                lat: 43.6829641,
+                label: "San Miniato",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.0415461,
+                lat: 43.5476586,
+                label: "Certaldo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.048549,
+                lat: 43.4654323,
+                label: "San Gimignano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.8660333,
+                lat: 43.399395,
+                label: "Volterra",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.9390215,
+                lat: 44.5490278,
+                label: "Castelnuovo Rangone",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.0131217000001,
+                lat: 44.4835861,
+                label: "Vignola",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.9457811,
+                lat: 44.5041498,
+                label: "Castelvetro di Modena",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 51.5310397999999,
+                lat: 25.2854473,
+                label: "Doha",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 77.2217831,
+                lat: 28.6862738,
+                label: "Delhi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 75.7872709000001,
+                lat: 26.9124336,
+                label: "Jaipur",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 74.5510856,
+                lat: 26.489749,
+                label: "Pushkar",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 76.6064802999999,
+                lat: 27.0072667,
+                label: "Chand Bawri, Step Well",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 78.0080745,
+                lat: 27.1766701,
+                label: "Agra",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 77.673673,
+                lat: 27.4924134,
+                label: "Mathura",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 77.6593394,
+                lat: 27.5650088,
+                label: "Vrindavan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 121.473701,
+                lat: 31.230416,
+                label: "Shanghai",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 174.7879046,
+                lat: -36.9992609,
+                label: "Auckland Airport",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: -149.4260421,
+                lat: -17.6509195,
+                label: "Tahiti",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -148.2391371,
+                lat: -15.1196445,
+                label: "Tikehau",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -149.8295234,
+                lat: -17.5388435,
+                label: "Moorea",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -151.7414904,
+                lat: -16.5004126,
+                label: "Bora Bora",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -151.4552213,
+                lat: -16.8164132,
+                label: "Raiatea",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -151.5019256,
+                lat: -16.6094815,
+                label: "Tahaa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -118.4911912,
+                lat: 34.0194543,
+                label: "Santa Monica",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -118.4799099,
+                lat: 33.9936153,
+                label: "Venice Beach",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.6209507286549,
+                lat: 45.9397152637252,
+                label: "Gorizia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 121.5654177,
+                lat: 25.0329694,
+                label: "Taipei",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 121.8462979,
+                lat: 25.109187,
+                label: "Chiufen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 1.444209,
+                lat: 43.604652,
+                label: "Tolosa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.14864130000001,
+                lat: 43.9250853,
+                label: "Albi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 1.95153400000004,
+                lat: 44.0631879,
+                label: "Cordes-sur-Ciel",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.3517703,
+                lat: 43.2132151,
+                label: "Carcassonne",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.9272044,
+                lat: 38.4936623,
+                label: "Lipari",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.970634,
+                lat: 38.3946132,
+                label: "Vulcano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.2339987,
+                lat: 38.8048668,
+                label: "Stromboli",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.8337879,
+                lat: 38.5674187,
+                label: "Salina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.8022261,
+                lat: 41.959817,
+                label: "Tivoli",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6485192,
+                lat: 41.7497932,
+                label: "Castel Gandolfo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6761041,
+                lat: 41.8085208,
+                label: "Frascati",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6726413,
+                lat: 41.7211083,
+                label: "Ariccia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7167242,
+                lat: 41.7196755,
+                label: "Nemi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.6865837,
+                lat: 41.7088828,
+                label: "Genzano di Roma",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.1513636,
+                lat: 41.745324,
+                label: "Anagni",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.2577285,
+                lat: 41.6956788,
+                label: "Ferentino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.2896755,
+                lat: 41.7271288,
+                label: "Fumone",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.4876688,
+                lat: 41.6714766,
+                label: "Casamari",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.4724486,
+                lat: 41.6409254,
+                label: "Boville Ernica",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.4128915,
+                lat: 41.6960182,
+                label: "Veroli",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.676178,
+                lat: 41.873393,
+                label: "San Nicola Varano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.4285052,
+                lat: 40.2733415,
+                label: "Torre dell'Orso",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.4911678,
+                lat: 40.1438978,
+                label: "Otranto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.4828748,
+                lat: 40.0793274,
+                label: "Porto Badisco",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.1724756,
+                lat: 40.1758228,
+                label: "Galatina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.2566556,
+                lat: 40.1611666,
+                label: "Corigliano D'otranto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.0331588,
+                lat: 40.1798489,
+                label: "Nardò",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.8930913,
+                lat: 40.260374,
+                label: "Porto Cesareo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.9979526,
+                lat: 40.1296678,
+                label: "Santa Maria al Bagno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.9926137,
+                lat: 40.0558508,
+                label: "Gallipoli",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.2409304,
+                lat: 40.7864228,
+                label: "Alberobello",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.3262806,
+                lat: 40.7559127,
+                label: "Locorotondo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.4248903,
+                lat: 40.7431824,
+                label: "Cisternino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.2985559,
+                lat: 40.9525166,
+                label: "Monopoli",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.22261,
+                lat: 40.9948946,
+                label: "Polignano a Mare",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.1750161,
+                lat: 40.3515155,
+                label: "Lecce",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.6043199,
+                lat: 40.666379,
+                label: "Matera",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.270936,
+                lat: 41.0847664,
+                label: "Castel del Monte",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.6910569,
+                lat: 41.1078251,
+                label: "Bitonto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.5749442,
+                lat: 42.8536043,
+                label: "Ascoli Piceno",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.59292,
+                lat: 35.5086218,
+                label: "Lampedusa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 22.9444191,
+                lat: 40.6400629,
+                label: "Salonicco",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 23.8941657,
+                lat: 39.1968615,
+                label: "Alonneso",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 23.4909759,
+                lat: 39.1626627,
+                label: "Sciato",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 23.7281233,
+                lat: 39.1223106,
+                label: "Skopelos",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.5039273,
+                lat: 43.3468188,
+                label: "Castelnuovo Berardenga",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.98512,
+                lat: 43.2750634,
+                label: "Cortona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.4956833,
+                lat: 43.3834502,
+                label: "San Gusmé",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.5451099,
+                lat: 43.4043594,
+                label: "Montebenichi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.2233863,
+                lat: 43.3901353,
+                label: "Monteriggioni",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.1941241,
+                lat: 43.3879013,
+                label: "Abbadia Isola",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.7045138,
+                lat: 43.1617332,
+                label: "Abbadia Sicille",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.2856676,
+                lat: 43.4715142,
+                label: "Castellina in Chianti",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 4.3571696,
+                lat: 50.8476424,
+                label: "Bruxelles",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 3.2247552,
+                lat: 51.2091807,
+                label: "Bruges",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 3.7303351,
+                lat: 51.0500182,
+                label: "Gand",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8495788,
+                lat: 44.8666232,
+                label: "Pola",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.7859506,
+                lat: 45.0425618,
+                label: "Valle",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.910092,
+                lat: 44.7748692,
+                label: "Za¨ti?eni krajobraz Donji Kamenjak",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 4.44601,
+                lat: 50.4096349,
+                label: "Charleroi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.686855,
+                lat: 3.139003,
+                label: "Kuala Lumpur",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.2500868,
+                lat: 2.189594,
+                label: "Malacca",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.090106,
+                lat: 4.597479,
+                label: "Ipoh",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.376639,
+                lat: 4.470611,
+                label: "Tanah Rata",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.3885071,
+                lat: 4.49105,
+                label: "Brinchang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.3287506,
+                lat: 5.4141307,
+                label: "George Town",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.2737713,
+                lat: 5.3994269,
+                label: "Kek Lok Si Temple",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.1297031,
+                lat: 5.428454,
+                label: "Gerik",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.2543825,
+                lat: 6.124785,
+                label: "Kota Bharu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.5523781,
+                lat: 5.829012,
+                label: "Besut",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.7537372,
+                lat: 5.9037879,
+                label: "Pulau Perhentian",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.6819444,
+                lat: 5.9627778,
+                label: "Pulau Rawa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.0734568,
+                lat: 5.980408,
+                label: "Kota Kinabalu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.5462981,
+                lat: 6.021255,
+                label: "Kinabalu Park",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.7033598,
+                lat: 6.0457242,
+                label: "Poring Hot Spring",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 117.9495461,
+                lat: 5.876055,
+                label: "Sepilok",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 118.206276,
+                lat: 5.4975971,
+                label: "Kinabatangan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 118.1171729,
+                lat: 5.839444,
+                label: "Sandakan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 118.611545,
+                lat: 4.479391,
+                label: "Semporna",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 118.6315839,
+                lat: 4.2457011,
+                label: "Isola di Mabul",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 118.6286669,
+                lat: 4.1149742,
+                label: "Sipadan",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 118.1143194,
+                lat: 4.3139807,
+                label: "Aeroporto di Tawau",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: 110.3592927,
+                lat: 1.553504,
+                label: "Kuching",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 110.2661901,
+                lat: 1.1556456,
+                label: "Annah Rais Longhouse | Bidayuh Homestay",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.7505271,
+                lat: 2.691369,
+                label: "Sepang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 51.5310398,
+                lat: 25.2854473,
+                label: "Doha",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.1681653,
+                lat: -8.6912894,
+                label: "Seminyak",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.0849069,
+                lat: -8.8291432,
+                label: "Tempio di Uluwatu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.086807,
+                lat: -8.621213,
+                label: "Tempio di Tanah Lot",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.2624778,
+                lat: -8.5068536,
+                label: "Ubud",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.1668234,
+                lat: -8.2751807,
+                label: "Pura Ulun Danu Bratan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.0384335,
+                lat: -8.3482917,
+                label: "Gili Trawangan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.0995781,
+                lat: -8.3944375,
+                label: "Lombok (porto)",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 119.5494844,
+                lat: -5.077747,
+                label: "Aeroporto internazionale Sultan Hasanuddin",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: 131.255828,
+                lat: -0.8761629,
+                label: "Sorong",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.8208792,
+                lat: -0.4248841,
+                label: "Waisai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.7367334,
+                lat: -0.4381476,
+                label: "PapuArts Alter-Native Stay",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.8135069,
+                lat: -0.438212,
+                label: "Sapokreng",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.2708139,
+                lat: -0.5642076,
+                label: "Piaynemo Raja Ampat",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.5167042,
+                lat: -0.5647536,
+                label: "Arborek Island",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.6023098,
+                lat: -0.5903592,
+                label: "Sauwandarek Village",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.710324,
+                lat: -0.7000472,
+                label: "Wai Resort",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.6494444,
+                lat: -0.8647222,
+                label: "Batanta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.6690807,
+                lat: -0.5635636,
+                label: "Turtle Homestay",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.6542105,
+                lat: -0.5713624,
+                label: "Yenbuba Village",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.5722222,
+                lat: -0.6511111,
+                label: "Augusta Island",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 106.845599,
+                lat: -6.2087634,
+                label: "Giacarta",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.819836,
+                lat: 1.352083,
+                label: "Singapore",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.8201408,
+                lat: 21.0031177,
+                label: "Hanoi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 107.1839024,
+                lat: 20.9100512,
+                label: "Baia di Ha Long",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.9744536,
+                lat: 20.2506149,
+                label: "Ninh Bình",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.9733982,
+                lat: 20.266078,
+                label: "?inh Tiên Hoàng",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.9374942,
+                lat: 20.2165662,
+                label: "Tam Coc",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8437852,
+                lat: 22.3363608,
+                label: "Sa Pa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8390162,
+                lat: 22.3944941,
+                label: "Ta Phin",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.9339114,
+                lat: 20.2294626,
+                label: "Hang Mua Viewpoint",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.6331035,
+                lat: 17.9757058,
+                label: "Vientiane",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.44379,
+                lat: 18.95009,
+                label: "Vang Vieng",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.1387166,
+                lat: 19.883285,
+                label: "Luang Prabang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.2305449,
+                lat: 20.0033837,
+                label: "Ban Xang Hai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.2113255,
+                lat: 20.0485582,
+                label: "Pak Ou Caves ???????",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.2283162,
+                lat: 20.0181607,
+                label: "Manifa Elephant Camp",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 101.9919369,
+                lat: 19.749498,
+                label: "Cascate Kuang Si",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.051478,
+                lat: 19.8250427,
+                label: "Naxao",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 107.5908628,
+                lat: 16.4637117,
+                label: "Hu?",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 108.3380469,
+                lat: 15.8800584,
+                label: "H?i An",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 106.6296638,
+                lat: 10.8230989,
+                label: "Ho Chi Minh",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 106.4623106,
+                lat: 11.1426821,
+                label: "Tunnel di Cu Chi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.7468535,
+                lat: 10.0451618,
+                label: "C?n Th?",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.7459816,
+                lat: 10.0050363,
+                label: "Cai Rang Floating Market",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.0579324,
+                lat: 10.5850515,
+                label: "Tra Su Cajuput Forest",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.1087261,
+                lat: 10.7022388,
+                label: "Chau Doc",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 105.2282571,
+                lat: 11.1771679,
+                label: "distretto di Leuk Daek",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 104.9282099,
+                lat: 11.5563738,
+                label: "Phnom Penh",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 104.8658936,
+                lat: 11.4053236,
+                label: "Siem Reap",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8608776,
+                lat: 13.3851263,
+                label: "APOPO - Humanitarian Demining",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9666115,
+                lat: 13.6031005,
+                label: "Banteay Srei",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9205357,
+                lat: 13.4349337,
+                label: "Pre Rup",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9201032,
+                lat: 13.4465566,
+                label: "Mebon orientale",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9129725,
+                lat: 13.4645929,
+                label: "Tempio di Ta Som",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8949176,
+                lat: 13.463308,
+                label: "Neak Pean",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8715817,
+                lat: 13.4618876,
+                label: "Preah Khan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8669857,
+                lat: 13.4124693,
+                label: "Angkor Wat",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8595168,
+                lat: 13.4275774,
+                label: "Tonle Om Gate (Southern Gate)",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8589036,
+                lat: 13.4412831,
+                label: "Tempio Bayon",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.8893041,
+                lat: 13.4347941,
+                label: "Ta Prohm",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9741597,
+                lat: 13.3357608,
+                label: "Bakong",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9728661,
+                lat: 13.3438744,
+                label: "Preah Ko",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 103.9745901,
+                lat: 13.3549342,
+                label: "Lolei Temple",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 104.1254812,
+                lat: 13.1052995,
+                label: "Kampong Khleang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 104.0536735,
+                lat: 12.9276385,
+                label: "Tonle Sap",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 104.2287969,
+                lat: 13.475565,
+                label: "Beng Mealea",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 107.1484521,
+                lat: 12.4747209,
+                label: "Sen Monorom",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 107.1678125,
+                lat: 12.3836875,
+                label: "Mondulkiri Project",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 107.418987,
+                lat: 12.5665454,
+                label: "Pou Tang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 107.418987,
+                lat: 12.5665454,
+                label: "Bousra Waterfall",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.1016811,
+                lat: -8.2171873,
+                label: "Banyumala Waterfall",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.1118354,
+                lat: -8.3492215,
+                label: "Jatiluwih",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 115.1726013,
+                lat: -8.5416323,
+                label: "Pura Taman Ayun",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -23.5133267,
+                lat: 14.93305,
+                label: "Praia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -23.6040974,
+                lat: 14.9163748,
+                label: "Cidade Velha",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -23.6710502,
+                lat: 15.098819,
+                label: "Assomada",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -23.7484077,
+                lat: 15.2760578,
+                label: "Tarrafal",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -24.9813499,
+                lat: 16.8765457,
+                label: "Mindelo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -24.9450124,
+                lat: 16.9038534,
+                label: "Salamansa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -24.908671,
+                lat: 16.9037558,
+                label: "Baía das Gatas",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -24.864908,
+                lat: 16.853889,
+                label: "Calhau",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -24.9309213,
+                lat: 16.8310052,
+                label: "Madeiral",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -25.0664308,
+                lat: 16.827017,
+                label: "Praia de São Pedro",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -9.1393366,
+                lat: 38.7222524,
+                label: "Lisbona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -9.3816589,
+                lat: 38.8028687,
+                label: "Sintra",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -7.9810845,
+                lat: 31.6294723,
+                label: "Marrakech",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -6.94,
+                lat: 31.43,
+                label: "Alto Atlante",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -9.7595041,
+                lat: 31.5084926,
+                label: "Provincia di Essaouira",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -6.8498129,
+                lat: 33.9715904,
+                label: "Rabat",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -6.0308654,
+                lat: 35.4646127,
+                label: "Assilah",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -5.2683641,
+                lat: 35.168796,
+                label: "Chefchaouen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -5.0078451,
+                lat: 34.0181246,
+                label: "Fes",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -5.5526793,
+                lat: 34.0708021,
+                label: "Conservation du site Archéologique de volubilis",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -5.5407299,
+                lat: 33.8730164,
+                label: "Meknes",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -5.5210511,
+                lat: 34.055902,
+                label: "Moulay Driss Zerhoun",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.910635,
+                lat: 31.9539494,
+                label: "Amman",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.8960765,
+                lat: 32.2746515,
+                label: "Jerash",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.6880516,
+                lat: 32.6543534,
+                label: "Gadara",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.751742,
+                lat: 32.3325599,
+                label: "Ajlun",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.7932432,
+                lat: 31.7193405,
+                label: "Madaba",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.7252775,
+                lat: 31.768332,
+                label: "Monte Nebo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.5845927,
+                lat: 31.7128331,
+                label: "Dead Sea Beach",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.5943687,
+                lat: 31.4555868,
+                label: "Wadi Mujib",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.5608333,
+                lat: 30.5313889,
+                label: "Shobak Castel",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.4801251,
+                lat: 30.3216354,
+                label: "Petra/Wadi Musa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.450431,
+                lat: 30.3745922,
+                label: "Piccola Petra",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.4210371,
+                lat: 29.5742989,
+                label: "Wadi Rum Village",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.394119,
+                lat: 29.4868893,
+                label: "Khaled`s Camp - Wadi Rum",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 35.0063209,
+                lat: 29.5320522,
+                label: "Aqaba",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 126.9917937,
+                lat: 37.5518911,
+                label: "Seoul",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 127.1160156,
+                lat: 35.8280463,
+                label: "Jeonju-si",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 129.0688702,
+                lat: 35.2100142,
+                label: "Busan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.4016888,
+                lat: 33.5901838,
+                label: "Fukuoka",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.5239685,
+                lat: 33.5127734,
+                label: "Dazaifu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 131.4907093,
+                lat: 33.2844614,
+                label: "Beppu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 131.3510866,
+                lat: 33.2840989,
+                label: "Yufuincho Kawakami",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 131.1443828,
+                lat: 33.0756271,
+                label: "Kurokawa Onsen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 131.0874754,
+                lat: 32.8985064,
+                label: "Monte Aso",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.7079369,
+                lat: 32.8032164,
+                label: "Kumamoto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.4058124,
+                lat: 33.1631009,
+                label: "Yanagawa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 130.0231915,
+                lat: 33.1963548,
+                label: "Takeo-Onsen Station",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 129.8778888,
+                lat: 32.7503334,
+                label: "Nagasaki",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 132.4553055,
+                lat: 34.3852894,
+                label: "Hiroshima",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 133.2049142,
+                lat: 34.4088998,
+                label: "Onomichi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 135.7681489,
+                lat: 35.011564,
+                label: "Kyoto",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 129.235988,
+                lat: 35.8266161,
+                label: "Gyeongju-si",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.0657549,
+                lat: -22.5608807,
+                label: "Windhoek",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.0045091,
+                lat: -23.8933454,
+                label: "Solitaire",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.8011445,
+                lat: -24.486698,
+                label: "Sesriem",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.3423909,
+                lat: -24.7273906,
+                label: "Sossusvlei",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.2923894,
+                lat: -24.7592732,
+                label: "Deadvlei",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.5257611,
+                lat: -22.6749351,
+                label: "Swakopmund",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.5057511,
+                lat: -22.9584081,
+                label: "Walvisbaai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.9524077,
+                lat: -21.7716993,
+                label: "Cape Cross",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.8673531,
+                lat: -21.2186578,
+                label: "Uis",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3693672,
+                lat: -20.5711387,
+                label: "Twyfelfontein Country Lodge",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.9818438,
+                lat: -19.906148,
+                label: "Palmwag",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.8361177,
+                lat: -18.0580139,
+                label: "Opuwo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.2433362,
+                lat: -17.0003371,
+                label: "Epupa Falls",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3685852,
+                lat: -19.3320673,
+                label: "Hobatere Lodge",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.3293197,
+                lat: -18.8555909,
+                label: "Parco nazionale Etosha",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.4697449,
+                lat: -19.0361831,
+                label: "Halali Camp",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.9402875,
+                lat: -18.8076237,
+                label: "Namutoni",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.9189879,
+                lat: -19.1787488,
+                label: "Okaukuejo Resort",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.3884677,
+                lat: -21.545541,
+                label: "Erindi Private Game Reserve",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.4021254,
+                lat: -22.3879809,
+                label: "Naankuse Lodge",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.2479554,
+                lat: 46.7654716,
+                label: "Keszthely",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.1905351,
+                lat: 46.7849573,
+                label: "Hévíz Lake",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.438156,
+                lat: 46.7933903,
+                label: "Szigliget",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.8880006,
+                lat: 46.9128663,
+                label: "Tihany",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.040235,
+                lat: 47.497912,
+                label: "Budapest",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.0668602,
+                lat: 47.6795337,
+                label: "Szentendre",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.7434452,
+                lat: 47.7883949,
+                label: "Esztergom",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.9733392,
+                lat: 47.7829694,
+                label: "Visegrád",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.232266,
+                lat: 46.0727345,
+                label: "Pécs",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.7983466,
+                lat: 46.0487727,
+                label: "Szigetvár",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.1222089,
+                lat: 46.5552711,
+                label: "Zalakaros",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -3.7037902,
+                lat: 40.4167754,
+                label: "Madrid",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 28.9783589,
+                lat: 41.0082376,
+                label: "Istanbul",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 98.9853008,
+                lat: 18.7883439,
+                label: "Chiang Mai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.3509846,
+                lat: 18.8655073,
+                label: "Mae Kampong Village",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.7232673,
+                lat: 19.8737421,
+                label: "Provincia di Chiang Rai",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.0814702,
+                lat: 20.3482746,
+                label: "Sop Ruak",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 98.3143192,
+                lat: 8.0981697,
+                label: "Nai Yang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 98.2764706,
+                lat: 8.0418057,
+                label: "Banana Beach",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 98.3012857,
+                lat: 7.8287744,
+                label: "Karon",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 98.3021044,
+                lat: 7.8965763,
+                label: "Patong",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 98.2926317,
+                lat: 8.0025463,
+                label: "Hat Bang Tao",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.0649391,
+                lat: 47.7514297,
+                label: "Anif",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.1287727,
+                lat: 47.8688068,
+                label: "Eugendorf",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.1047752,
+                lat: 47.9703866,
+                label: "Mattsee",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.3578462,
+                lat: 47.7722129,
+                label: "Sankt Gilgen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 13.6492617,
+                lat: 47.5622342,
+                label: "Hallstatt",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.285918,
+                lat: 48.3069096,
+                label: "Linz",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.3174657,
+                lat: 48.8127354,
+                label: "?eský Krumlov",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.480255,
+                lat: 48.9756578,
+                label: "?eské Bud?jovice",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 14.4378005,
+                lat: 50.0755381,
+                label: "Praga",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.8719616,
+                lat: 50.2318521,
+                label: "Karlovy Vary",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.7540628,
+                lat: 50.1860122,
+                label: "Loket",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 12.1016236,
+                lat: 49.0134297,
+                label: "Ratisbona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8420794,
+                lat: 1.4748305,
+                label: "Manado",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8183932,
+                lat: 1.5829073,
+                label: "Bahowo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.7602683,
+                lat: 1.6235162,
+                label: "Bunaken",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8025,
+                lat: 1.6316667,
+                label: "Siladen Island",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8290861,
+                lat: 1.762501,
+                label: "Dolphin trip",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8353314,
+                lat: 1.3666715,
+                label: "Tomohon",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8263889,
+                lat: 1.2708333,
+                label: "Lake Linow",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.7996969,
+                lat: 1.3242603,
+                label: "Rice fields",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8625,
+                lat: 1.3533333,
+                label: "Mount Mahawu",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8206902,
+                lat: 1.1664456,
+                label: "Ranolewo (hot springs)",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.8800933,
+                lat: 1.3534683,
+                label: "Tuur Ma'asering Kumelembuai Tomohon (palm wine)",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.9006463,
+                lat: 1.2538491,
+                label: "Lake Tondano",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.7712251,
+                lat: 1.1592527,
+                label: "Watu Pinabetengan (sacred stone + shaman)",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.7659944,
+                lat: 1.1653281,
+                label: "Collina sacra",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 124.867,
+                lat: 1.33608333333333,
+                label: "Sunset point",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 119.9168635,
+                lat: -3.1861493,
+                label: "Toraja Airport",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: 119.9024043,
+                lat: -2.9673798,
+                label: "Rantepao",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 119.9106149,
+                lat: -2.9951676,
+                label: "Ke'te' Kesu' Toraja",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 119.8773275,
+                lat: -3.0425204,
+                label: "Kuburan Batu Lemo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 119.8757915,
+                lat: -3.01476,
+                label: "Goa Londa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 119.8875382,
+                lat: -3.0789423,
+                label: "Baby Grave Tree , toraja",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 119.8832054,
+                lat: -2.9111217,
+                label: "Batutumonga Viewpoint",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 120.2423089,
+                lat: -3.0860941,
+                label: "Palopo Airport",
+                color: "#f39c12"
+            },
+            {
+                type: "airport",
+                lng: 122.4171926,
+                lat: -4.0767873,
+                label: "Kendari Airport",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: 122.5244809,
+                lat: -3.8936452,
+                label: "Dermaga Nelayan",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 122.4675865,
+                lat: -3.4711362,
+                label: "Labengki",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 122.4826178,
+                lat: -3.4826334,
+                label: "Lebengki Kecil (village)",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 122.4263889,
+                lat: -3.2836111,
+                label: "Pulau Sombori",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.6452348,
+                lat: 45.7147433,
+                label: "Castelletto sopra Ticino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.5581818,
+                lat: 45.7584764,
+                label: "Arona",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.5257951,
+                lat: 45.8882205,
+                label: "Stresa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.4169487,
+                lat: 45.7965387,
+                label: "Orta San Giulio",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -5.9844589,
+                lat: 37.3890924,
+                label: "Siviglia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -4.7792753,
+                lat: 37.8893025,
+                label: "Cordova",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -3.6011676,
+                lat: 37.1824607,
+                label: "Granada",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -4.425557,
+                lat: 36.7178196,
+                label: "Málaga",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.9449799,
+                lat: 50.0646501,
+                label: "Cracovia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.8175501,
+                lat: 49.367594,
+                label: "Chocho?ów",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.9370173,
+                lat: 49.3074272,
+                label: "Guba?ówka",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.9495621,
+                lat: 49.299181,
+                label: "Zakopane",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.8231199,
+                lat: 49.3518255,
+                label: "Chocho?owskie Termy",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.407395,
+                lat: 39.904211,
+                label: "Pechino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.2754606,
+                lat: 39.9999823,
+                label: "Palazzo d'Estate",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 116.5537559,
+                lat: 40.4481724,
+                label: "Mutianyu Great Wall of China",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 112.17557,
+                lat: 37.1893399,
+                label: "Ping Yao",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 108.9540936,
+                lat: 34.2658138,
+                label: "Xi'an",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 110.47839,
+                lat: 29.1166699,
+                label: "Zhangjiajie",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 110.482084,
+                lat: 29.046809,
+                label: "Montagna Tianmen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 110.434767,
+                lat: 29.315305,
+                label: "Parco forestale nazionale Zhangjiajie",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 109.59832,
+                lat: 27.9484299,
+                label: "Fenghuang County",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 109.9481973,
+                lat: 28.7506235,
+                label: "Furong Ancient Town (Wangcun)",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 110.0016,
+                lat: 27.5697399,
+                label: "Huaihua",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 102.83322,
+                lat: 24.8796599,
+                label: "Kunming",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.26764,
+                lat: 25.6064799,
+                label: "Dali",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.129667,
+                lat: 25.957197,
+                label: "Shangguanzhen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.84643,
+                lat: 26.31382,
+                label: "Shaxizhen",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 99.7093341,
+                lat: 27.8078181,
+                label: "Shangri-La Dukezong Ancient City",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 100.2270999,
+                lat: 26.8564799,
+                label: "Lijiang",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.73201040000004,
+                lat: 52.3758916,
+                label: "Hannover",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 11.8796336,
+                lat: 43.4632839,
+                label: "Arezzo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.2513103,
+                lat: 43.8657267,
+                label: "Viareggio",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -80.8431267,
+                lat: 35.2270869,
+                label: "Charlotte",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -84.1916069,
+                lat: 39.7589478,
+                label: "Dayton",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -83.0457538,
+                lat: 42.331427,
+                label: "Detroit",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 37.0650800999999,
+                lat: -3.4245248,
+                label: "Aeroporto Internazionale del Kilimangiaro",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: 39.6682065,
+                lat: -4.0434771,
+                label: "Mombasa",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 36.8219462,
+                lat: -1.2920659,
+                label: "Nairobi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 31.57125,
+                lat: 4.859363,
+                label: "Giuba",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -3.70379019999996,
+                lat: 40.4167754,
+                label: "Madrid",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -3.70797449999998,
+                lat: 40.600727,
+                label: "Tres Cantos",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.2544335,
+                lat: 41.9304373,
+                label: "Vic",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.26266129999999,
+                lat: 42.0491614,
+                label: "Torelló",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 2.61915599999998,
+                lat: 48.98543,
+                label: "Mitry-Mory",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 32.463708,
+                lat: 0.0511839,
+                label: "Entebbe",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 32.652383,
+                lat: -0.100681,
+                label: "Ngamba Island Chimpanzee Sanctuary",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 32.5825197,
+                lat: 0.3475964,
+                label: "Kampala",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 30.1044288000001,
+                lat: -1.9705786,
+                label: "Kigali",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 29.2204548,
+                lat: -1.658501,
+                label: "Goma",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 45.3181623,
+                lat: 2.0469343,
+                label: "Mogadiscio",
+                color: "#e0531b"
+            },
+            {
+                type: "airport",
+                lng: 40.0917509999999,
+                lat: 1.733306,
+                label: "Wajir Airport",
+                color: "#f39c12"
+            },
+            {
+                type: "home",
+                lng: 18.7408001,
+                lat: 49.2194498,
+                label: "´ilina",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.7811994,
+                lat: 50.0343092,
+                label: "Pardubice",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 25.5945249,
+                lat: 42.0545053,
+                label: "Dimitrovgrad",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 25.5554462,
+                lat: 41.9344366,
+                label: "Haskovo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 23.3218675000001,
+                lat: 42.6977082,
+                label: "Sofia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.6771005000001,
+                lat: 43.812488,
+                label: "Altopascio",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.6658014,
+                lat: 43.8534711,
+                label: "Montecarlo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.6472914,
+                lat: 38.1113006,
+                label: "Reggio Calabria",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 15.7180247,
+                lat: 38.2512005,
+                label: "Scilla",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.20978790000004,
+                lat: 44.3031559,
+                label: "Portofino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 8.94625599999995,
+                lat: 44.4056499,
+                label: "Genova",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.68028779999997,
+                lat: 44.9983525,
+                label: "Moncalieri",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 9.60490709999999,
+                lat: 45.6502006,
+                label: "Dalmine",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.655573,
+                lat: 45.0021286,
+                label: "Nichelino",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.77097839999999,
+                lat: 45.139586,
+                label: "Settimo Torinese",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 7.88895200000002,
+                lat: 45.1900384,
+                label: "Chivasso",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.18562,
+                lat: 45.6889709,
+                label: "Gardone Val Trompia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 17.9417616000001,
+                lat: 40.6327278,
+                label: "Brindisi",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 4.35171030000004,
+                lat: 50.8503396,
+                label: "Bruxelles",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -0.776942200000008,
+                lat: 51.5719443,
+                label: "Marlow",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -0.80767800000001,
+                lat: 51.549254,
+                label: "Hurley",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: -0.710069400000066,
+                lat: 51.5765108,
+                label: "Bourne End",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.9553238999999,
+                lat: 69.6492047,
+                label: "Tromsø",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.3255709,
+                lat: 69.7364548,
+                label: "Rekvik",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 10.7522454,
+                lat: 59.9138688,
+                label: "Oslo",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.6206155,
+                lat: 69.6942938,
+                label: "Ersfjordbotn",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 18.7758757,
+                lat: 69.7982096,
+                label: "69.7982096,18.7758757",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 19.2097782,
+                lat: 50.0343982,
+                label: "O?wi?cim",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 21.0122287,
+                lat: 52.2296756,
+                label: "Varsavia",
+                color: "#e0531b"
+            },
+            {
+                type: "home",
+                lng: 16.5844795,
+                lat: 47.6816619,
+                label: "Sopron",
+                color: "#e0531b"
+            }
+        ];
+
+        function initGlobe() {
+            world = Globe()
+                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-day.jpg')
+                .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                .pointsData(currentData)
+                .pointAltitude(0.04)
+                .pointColor('color')
+                .pointLabel('label')
+                .pointRadius(0.3)
+                .pointResolution(5)
+                .enablePointerInteraction(true)
+                (document.getElementById('globeViz'));
+
+            // Auto-rotate
+            world.controls().autoRotate = true;
+            world.controls().autoRotateSpeed = 0.5;
+        }
+
+        function loadSampleData() {
+            currentData = [...sampleData];
+            world.pointsData(currentData);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+            return lines.slice(1).filter(line => line.trim()).map(line => {
+                const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                const obj = {};
+
+                headers.forEach((header, i) => {
+                    if (header === 'lat' || header === 'lng') {
+                        obj[header] = parseFloat(values[i]) || 0;
+                    } else if (header === 'size') {
+                        obj[header] = parseFloat(values[i]) || 0.5;
+                    } else {
+                        obj[header] = values[i] || '';
+                    }
+                });
+
+                return obj;
+            });
+        }
+
+        function validateData(data) {
+            if (!Array.isArray(data)) {
+                throw new Error('Data must be an array');
+            }
+
+            for (let i = 0; i < data.length; i++) {
+                const point = data[i];
+                if (typeof point.lat !== 'number' || typeof point.lng !== 'number') {
+                    throw new Error(`Invalid coordinates at index ${i}. lat and lng must be numbers.`);
+                }
+                if (point.lat < -90 || point.lat > 90) {
+                    throw new Error(`Invalid latitude ${point.lat} at index ${i}. Must be between -90 and 90.`);
+                }
+                if (point.lng < -180 || point.lng > 180) {
+                    throw new Error(`Invalid longitude ${point.lng} at index ${i}. Must be between -180 and 180.`);
+                }
+
+                // Set defaults for missing fields
+                if (!point.label) point.label = `Point ${i + 1}`;
+                if (!point.color) point.color = 'red';
+            }
+
+            return data;
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let data;
+
+                    if (file.name.toLowerCase().endsWith('.json')) {
+                        data = JSON.parse(e.target.result);
+                    } else if (file.name.toLowerCase().endsWith('.csv')) {
+                        data = parseCSV(e.target.result);
+                    } else {
+                        throw new Error('Unsupported file format. Use JSON or CSV.');
+                    }
+
+                    data = validateData(data);
+                    currentData = data;
+                    world.pointsData(currentData);
+                    updateMarkerCount();
+                    showStatus(`âœ… Loaded ${data.length} markers successfully!`);
+
+                    // Stop auto-rotation when user loads data to let them examine
+                    world.controls().autoRotate = false;
+
+                } catch (error) {
+                    showStatus(`âŒ Error: ${error.message}`, true);
+                    console.error('File parsing error:', error);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Initialize globe when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initGlobe();
+
+            // Load sample data by default
+            setTimeout(() => {
+                loadSampleData();
+            }, 1000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (world) {
+                world.width(window.innerWidth).height(window.innerHeight);
+            }
+        });
+    </script>
+</body>
+
+</html>
